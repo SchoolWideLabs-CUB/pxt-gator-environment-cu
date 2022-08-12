@@ -5,6 +5,7 @@
  * Functional version of the pxt-gator-environment extension from Sparkfun.
  */
 
+
 /**
  * Functions to operate the gatorEnvironment sensor
  */
@@ -19,7 +20,8 @@ enum measurementType {
 
 //% color=#f44242 icon="\uf0c2"
 namespace gatorEnvironment {
-    // Functions for reading Particle from the gatorEnvironment in Particle or straight adv value
+    
+    let gatorEnvironmentCombo = new Environment();
 
     /**
     * Initialize the gator:environment sensor for readings
@@ -29,6 +31,7 @@ namespace gatorEnvironment {
     //% block="initialize gator:environment sensors"
     //% shim=gatorEnvironment::beginEnvironment
     export function beginEnvironment() {
+        gatorEnvironmentCombo.begin();
         return
     }
 
@@ -40,6 +43,38 @@ namespace gatorEnvironment {
     //% block="get %measurementType | value"
     //% shim=gatorEnvironment::getMeasurement
     export function getMeasurement(type: measurementType): number {
-        return 0
+        let value = 0;
+        switch (type) {
+            case 1:
+                value = gatorEnvironmentCombo.readTempC();
+                break;
+            case 2:
+                value = gatorEnvironmentCombo.readTempF();
+                break;
+            case 3:
+                value = gatorEnvironmentCombo.readFloatHumidity();
+                break;
+            case 4:
+                value = gatorEnvironmentCombo.readFloatPressure();
+                break;
+            case 5:
+                if (gatorEnvironmentCombo.dataAvailable()) {
+                    gatorEnvironmentCombo.readAlgorithmResults();
+                }
+                value = gatorEnvironmentCombo.getCO2();
+                break;
+            case 6:
+                if (gatorEnvironmentCombo.dataAvailable()) {
+                    gatorEnvironmentCombo.readAlgorithmResults();
+                }
+                value = gatorEnvironmentCombo.getTVOC();
+                break;
+            default:
+                value = 0;
+                break;
+        }
+        return value;
     }
 }
+
+
