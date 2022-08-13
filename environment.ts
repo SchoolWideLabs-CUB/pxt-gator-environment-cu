@@ -94,6 +94,10 @@ class Environment {
     BMEhumidOverSample: bigint;
     BMEtempCorrection: number;
 
+    _wireType = HARD_WIRE; //Default to Wire.h
+
+    _referencePressure = 101325.0; //Default but is changeable
+
 
     constructor(){
         return;
@@ -173,6 +177,20 @@ class Environment {
     // 11 = Normal mode
     getMode(){
 
+        let controlData: bigint = readRegister(BME280_ADDRESS, BME280_CTRL_MEAS_REG);
+        return(controlData & 0b00000011); //Clear bits 7 through 2
+
+
+       
+
+    } //Get the current mode: sleep, forced, or normal
+
+    //Set the mode bits in the ctrl_meas register
+    // Mode 00 = Sleep
+    // 01 and 10 = Forced
+    // 11 = Normal mode
+    setMode(mode: bigint){
+
         if (mode > 0b11) {
             mode = 0; //Error check. Default to sleep mode
         }
@@ -181,10 +199,6 @@ class Environment {
         controlData &= ~( (1<<1) | (1<<0) ); //Clear the mode[1:0] bits
         controlData |= mode; //Set
         writeRegister(BME280_ADDRESS, BME280_CTRL_MEAS_REG, controlData);
-
-    } //Get the current mode: sleep, forced, or normal
-
-    setMode(mode: bigint){
 
     } //Set the current mode
 
@@ -204,23 +218,103 @@ class Environment {
 
     }
 
+    //Set the temperature oversample value
+    //0 turns off temp sensing
+    //1 to 16 are valid over sampling values
     setTempOverSample(overSampleAmount: bigint){
+        overSampleAmount = checkSampleValue(overSampleAmount); //Error check
+    
+        let originalMode: bigint = getMode(); //Get the current mode so we can go back to it at the end
+        
+        setMode(MODE_SLEEP); //Config will only be writeable in sleep mode, so first go to sleep mode
+
+        //Set the osrs_t bits (7, 6, 5) to overSampleAmount
+        let controlData: bigint = readRegister(BME280_ADDRESS, BME280_CTRL_MEAS_REG);
+        controlData &= ~( (1<<7) | (1<<6) | (1<<5) ); //Clear bits 765
+        controlData |= overSampleAmount << 5; //Align overSampleAmount to bits 7/6/5
+        writeRegister(BME280_ADDRESS, BME280_CTRL_MEAS_REG, controlData);
+        
+        setMode(originalMode); //Return to the original user's choice
 
     } //Set the temperature sample mode
 
+    //Set the pressure oversample value
+    //0 turns off pressure sensing
+    //1 to 16 are valid over sampling values
     setPressureOverSample(overSampleAmount: bigint){
+        overSampleAmount = checkSampleValue(overSampleAmount); //Error check
+    
+        let originalMode: bigint = getMode(); //Get the current mode so we can go back to it at the end
+        
+        setMode(MODE_SLEEP); //Config will only be writeable in sleep mode, so first go to sleep mode
+
+        //Set the osrs_p bits (4, 3, 2) to overSampleAmount
+        let controlData: bigint = readRegister(BME280_ADDRESS, BME280_CTRL_MEAS_REG);
+        controlData &= ~( (1<<4) | (1<<3) | (1<<2) ); //Clear bits 432
+        controlData |= overSampleAmount << 2; //Align overSampleAmount to bits 4/3/2
+        writeRegister(BME280_ADDRESS, BME280_CTRL_MEAS_REG, controlData);
+        
+        setMode(originalMode); //Return to the original user's choice
 
     } //Set the pressure sample mode
 
+    //Set the humidity oversample value
+    //0 turns off humidity sensing
+    //1 to 16 are valid over sampling values
     setHumidityOverSample(overSampleAmount: bigint){
+        overSampleAmount = checkSampleValue(overSampleAmount); //Error check
+        
+        let originalMode: bigint = getMode(); //Get the current mode so we can go back to it at the end
+        
+        setMode(MODE_SLEEP); //Config will only be writeable in sleep mode, so first go to sleep mode
+
+        //Set the osrs_h bits (2, 1, 0) to overSampleAmount
+        let controlData: bigint = readRegister(BME280_ADDRESS, BME280_CTRL_HUMIDITY_REG);
+        controlData &= ~( (1<<2) | (1<<1) | (1<<0) ); //Clear bits 2/1/0
+        controlData |= overSampleAmount << 0; //Align overSampleAmount to bits 2/1/0
+        writeRegister(BME280_ADDRESS, BME280_CTRL_HUMIDITY_REG, controlData);
+
+        setMode(originalMode); //Return to the original user's choice
 
     } //Set the humidity sample mode
 
+    //Set the standby bits in the config register
+    //tStandby can be:
+    //  0, 0.5ms
+    //  1, 62.5ms
+    //  2, 125ms
+    //  3, 250ms
+    //  4, 500ms
+    //  5, 1000ms
+    //  6, 10ms
+    //  7, 20ms
     setStandbyTime(timeSetting: bigint){
+        if (timeSetting > 0b111) {
+            timeSetting = 0; //Error check. Default to 0.5ms
+        }
+    
+        let controlData: bigint = readRegister(BME280_ADDRESS, BME280_CONFIG_REG);
+        controlData &= ~( (1<<7) | (1<<6) | (1<<5) ); //Clear the 7/6/5 bits
+        controlData |= (timeSetting << 5); //Align with bits 7/6/5
+        writeRegister(BME280_ADDRESS, BME280_CONFIG_REG, controlData);
 
     } //Set the standby time between measurements
 
+    //Set the filter bits in the config register
+    //filter can be off or number of FIR coefficients to use:
+    //  0, filter off
+    //  1, coefficients = 2
+    //  2, coefficients = 4
+    //  3, coefficients = 8
+    //  4, coefficients = 16
     setFilter(filterSetting: bigint){
+        if(filterSetting > 0b111){ 
+            filterSetting = 0; //Error check. Default to filter off
+        }
+        let controlData: bigint = readRegister(BME280_ADDRESS, BME280_CONFIG_REG);
+        controlData &= ~( (1<<4) | (1<<3) | (1<<2) ); //Clear the 4/3/2 bits
+        controlData |= (filterSetting << 2); //Align with bits 4/3/2
+        writeRegister(BME280_ADDRESS, BME280_CONFIG_REG, controlData);
 
     } //Set the filter
 
@@ -245,34 +339,57 @@ class Environment {
 
     }
     dataAvailable(){
-        let bool: boolean;
-        return bool;
+        let value: bigint = readRegister(CCS811_ADDRESS, CCS811_STATUS);
+        return (value & 1 << 3);
     }
 
     getTVOC(){
-        let int: bigint;
-        return int;
+        return tVOC;
     }
 
     getCO2(){
-        let int: bigint;
-        return int;
-    }
+        return CO2;
 
+    //Check the measuring bit and return true while device is taking measurement
     isMeasuring(){
-        let bool: boolean;
-        return bool;
+        let stat: bigint = readRegister(BME280_ADDRESS, BME280_STAT_REG);
+        return (stat & (1<<3)); //If the measuring bit (3) is set, return true
     }//Returns true while the device is taking measurement
 
-    //Software reset routine
+    //Software reset routine: strictly resets. Run .begin() afterwards
     reset(){
+        writeRegister(BME280_ADDRESS, BME280_RST_REG, 0xB6);
 
     }
 
     //Returns the values as floats.
     readFloatPressure(){
-        let float: number;
-        return float;
+
+        // Returns pressure in Pa as unsigned 32 bit integer in Q24.8 format (24 integer bits and 8 fractional bits).
+        // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
+        uint8_t buffer[3];
+        readRegisterRegion(BME280_ADDRESS, &buffer[0], BME280_PRESSURE_MSB_REG, 3);
+        int32_t adc_P = ((uint32_t)buffer[0] << 12) | ((uint32_t)buffer[1] << 4) | ((buffer[2] >> 4) & 0x0F);
+        
+        int64_t var1, var2, p_acc;
+        var1 = ((int64_t)t_fine) - 128000;
+        var2 = var1 * var1 * (int64_t)calibration.dig_P6;
+        var2 = var2 + ((var1 * (int64_t)calibration.dig_P5)<<17);
+        var2 = var2 + (((int64_t)calibration.dig_P4)<<35);
+        var1 = ((var1 * var1 * (int64_t)calibration.dig_P3)>>8) + ((var1 * (int64_t)calibration.dig_P2)<<12);
+        var1 = (((((int64_t)1)<<47)+var1))*((int64_t)calibration.dig_P1)>>33;
+        if (var1 == 0)
+        {
+            return 0; // avoid exception caused by division by zero
+        }
+        p_acc = 1048576 - adc_P;
+        p_acc = (((p_acc<<31) - var2)*3125)/var1;
+        var1 = (((int64_t)calibration.dig_P9) * (p_acc>>13) * (p_acc>>13)) >> 25;
+        var2 = (((int64_t)calibration.dig_P8) * p_acc) >> 19;
+        p_acc = ((p_acc + var1 + var2) >> 8) + (((int64_t)calibration.dig_P7)<<4);
+        
+        pressure = (float)p_acc / 256.0;
+        return pressure;
     }
     readFloatAltitudeMeters(){
         let float: number;
@@ -349,14 +466,37 @@ class Environment {
 
 // private
 
+    //Validates an over sample value
+    //Allowed values are 0 to 16
+    //These are used in the humidty, pressure, and temp oversample functions
     checkSampleValue(userValue: bigint){
-        int: bigint;
-        return int;
+        switch(userValue) 
+        {
+            case(0): 
+                return 0;
+                break; //Valid
+            case(1): 
+                return 1;
+                break; //Valid
+            case(2): 
+                return 2;
+                break; //Valid
+            case(4): 
+                return 3;
+                break; //Valid
+            case(8): 
+                return 4;
+                break; //Valid
+            case(16): 
+                return 5;
+                break; //Valid
+            default: 
+                return 1; //Default to 1x
+                break; //Good
+        }
     } //Checks for valid over sample values
 
-    _wireType = HARD_WIRE; //Default to Wire.h
 
-    _referencePressure = 101325.0; //Default but is changeable
 }
 
 class SensorCalibration {
