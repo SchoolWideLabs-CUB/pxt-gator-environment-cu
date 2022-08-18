@@ -85,7 +85,7 @@ class Environment {
 
     t_fine: bigint;
 
-    SensorCalibration calibration;
+    SensorCalibration calibration = new SensorCalibration();
     BMErunMode: bigint;
     BMEtStandby: bigint;
     BMEfilter: bigint;
@@ -367,7 +367,7 @@ class Environment {
 
         // Returns pressure in Pa as unsigned 32 bit integer in Q24.8 format (24 integer bits and 8 fractional bits).
         // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
-        uint8_t buffer[3];
+        let buffer: bigint[] = [0,0,0]
         readRegisterRegion(BME280_ADDRESS, &buffer[0], BME280_PRESSURE_MSB_REG, 3);
         int32_t adc_P = ((uint32_t)buffer[0] << 12) | ((uint32_t)buffer[1] << 4) | ((buffer[2] >> 4) & 0x0F);
         
@@ -442,18 +442,25 @@ class Environment {
 
 //ReadRegisterRegion takes a ubigint array address as input and reads
 //a chunk of memory into that array.
-    readRegisterRegion(address: bigint, outputPointer: bigint, offset: bigint, length: bigint){
+    readRegisterRegion(address: bigint, offset: bigint, length: bigint){
+        let data: number[] = [];
+        for (let i = 0; i < length; i++){
+            data.append(pins.i2cReadNumber(address, offset, NumberFormat.UInt8LE))
+        }
 
     }
 //readRegister reads one register
-    readRegister(int: bigint, int2: bigint){
-        return int;
+    readRegister(address: bigint, offset: bigint){
+        let value = pins.i2cReadNumber(address, offset, false);
+        return value;
     }
 //Reads two regs, LSByte then MSByte order, and concatenates them
 //Used for two-byte reads
     readRegisterInt16(int1: bigint, offset: bigint){
-        int: bigint;
-        return int;
+        let myBuffer = readRegisterRegion(address, offset, 2);  //Does memory transfer
+        int16_t output = (int16_t)myBuffer[0] | int16_t(myBuffer[1] << 8);
+        
+        return output;
     }
 //Writes a byte;
     writeRegister(int1: bigint, int2: bigint, int3: bigint){
