@@ -314,12 +314,12 @@ class Environment {
     } //Set the filter
 
     setReferencePressure(refPressure: any){
+        _referencePressure = refPressure;
 
     } //Allows user to set local sea level reference pressure
 
     getReferencePressure(){
-        let float: number;
-        return float;
+        return _referencePressure;
     }
 
     readAlgorithmResults(){
@@ -362,63 +362,104 @@ class Environment {
 
         // Returns pressure in Pa as unsigned 32 bit integer in Q24.8 format (24 integer bits and 8 fractional bits).
         // Output value of “24674867” represents 24674867/256 = 96386.2 Pa = 963.862 hPa
-        let buffer: bigint[] = [0,0,0]
-        readRegisterRegion(BME280_ADDRESS, &buffer[0], BME280_PRESSURE_MSB_REG, 3);
-        int32_t adc_P = ((uint32_t)buffer[0] << 12) | ((uint32_t)buffer[1] << 4) | ((buffer[2] >> 4) & 0x0F);
-        
-        int64_t var1, var2, p_acc;
-        var1 = ((int64_t)t_fine) - 128000;
-        var2 = var1 * var1 * (int64_t)calibration.dig_P6;
-        var2 = var2 + ((var1 * (int64_t)calibration.dig_P5)<<17);
-        var2 = var2 + (((int64_t)calibration.dig_P4)<<35);
-        var1 = ((var1 * var1 * (int64_t)calibration.dig_P3)>>8) + ((var1 * (int64_t)calibration.dig_P2)<<12);
-        var1 = (((((int64_t)1)<<47)+var1))*((int64_t)calibration.dig_P1)>>33;
+        let buffer: bigint[] = readRegisterRegion(BME280_ADDRESS, BME280_PRESSURE_MSB_REG, 3);
+        let adc_P: bigint = (buffer[0] << 12) | (buffer[1] << 4) | ((buffer[2] >> 4) & 0x0F);
+        let var1: bigint = (t_fine) - 128000;
+        let var2: bigint = var1 * var1 * calibration.dig_P6;
+        var2 = var2 + ((var1 * calibration.dig_P5)<<17);
+        var2 = var2 + ((calibration.dig_P4)<<35);
+        var1 = ((var1 * var1 * calibration.dig_P3)>>8) + ((var1 * calibration.dig_P2)<<12);
+        var1 = ((((1)<<47)+var1))*(calibration.dig_P1)>>33;
         if (var1 == 0)
         {
             return 0; // avoid exception caused by division by zero
         }
-        p_acc = 1048576 - adc_P;
+        let p_acc = 1048576 - adc_P;
         p_acc = (((p_acc<<31) - var2)*3125)/var1;
-        var1 = (((int64_t)calibration.dig_P9) * (p_acc>>13) * (p_acc>>13)) >> 25;
-        var2 = (((int64_t)calibration.dig_P8) * p_acc) >> 19;
-        p_acc = ((p_acc + var1 + var2) >> 8) + (((int64_t)calibration.dig_P7)<<4);
+        var1 = ((calibration.dig_P9) * (p_acc>>13) * (p_acc>>13)) >> 25;
+        var2 = ((calibration.dig_P8) * p_acc) >> 19;
+        p_acc = ((p_acc + var1 + var2) >> 8) + ((calibration.dig_P7)<<4);
         
-        pressure = (float)p_acc / 256.0;
+        let pressure: number = p_acc / 256.0;
         return pressure;
     }
     readFloatAltitudeMeters(){
-        let float: number;
-        return float;
+        let heightOutput: number = (-44330.77)*(pow((readFloatPressure()/_referencePressure), 0.190263) - 1); //Corrected, see issue 30
+        return heightOutput;
     }
     readFloatAltitudeFeet(){
-        let float: number;
-        return float;
+        let heightOutput: number = readFloatAltitudeMeters() * 3.28084;
+        return heightOutput;
     }
 
     readFloatHumidity(){
-        let float: number;
-        return float;
+            // Returns humidity in %RH as unsigned 32 bit integer in Q22. 10 format (22 integer and 10 fractional bits).
+    // Output value of “47445” represents 47445/1024 = 46. 333 %RH
+    let buffer: bigint[] = readRegisterRegion(BME280_ADDRESS, BME280_HUMIDITY_MSB_REG, 2);
+    readRegisterRegion(BME280_ADDRESS, BME280_HUMIDITY_MSB_REG, 2);
+    let adc_H: bigint = (buffer[0] << 8) | (buffer[1]);
+    
+    let var1: bigint = t_fine - (76800);
+    
+    var1 = (((((adc_H << 14) - ((calibration.dig_H4) << 20) - ((calibration.dig_H5) * var1)) + (16384)) >> 15) * (((((((var1 * (calibration.dig_H6)) >> 10) * (((var1 * (calibration.dig_H3)) >> 11) + (32768))) >> 10) + (2097152)) * (calibration.dig_H2) + 8192) >> 14));
+    var1 = (var1 - (((((var1 >> 15) * (var1 >> 15)) >> 7) * (calibration.dig_H1)) >> 4));
+    var1 = (var1 < 0 ? 0 : var1);
+    var1 = (var1 > 419430400 ? 419430400 : var1);
+
+    return Number((var1>>12) / 1024.0);
     }
 
-//Temperature related methods
+//Temperature related 
+// Returns temperature in DegC, resolution is 0.01 DegC. Output value of “5123” equals 51.23 DegC.
+    // t_fine carries fine temperature as global value
+
+    //get the reading (adc_T);
     readTempC(){
-        let float: number;
-        return float;
+        let buffer: bigint[] = [0,0,0]
+        buffer = readRegisterRegion(BME280_ADDRESS, BME280_TEMPERATURE_MSB_REG, 3);
+        let adc_T = (buffer[0] << 12) | (buffer[1] << 4) | ((buffer[2] >> 4) & 0x0F);
+
+        let var1: bigint = (((adc_T>>3) - (calibration.dig_T1<<1)) * (calibration.dig_T2)) >> 11;
+        let var2: bigint = (((((adc_T>>4) - (calibration.dig_T1)) * ((adc_T>>4) - (calibration.dig_T1))) >> 12) * (calibration.dig_T3)) >> 14;
+
+        t_fine = var1 + var2;
+        let output: number = (t_fine * 5 + 128) >> 8;
+
+        output = output / 100 + BMEtempCorrection;
+        return output;
     }
+
+
     readTempF(){
-        let float: number;
-        return float;
+        let output = readTempC();
+        output = (output * 9) / 5 + 32;
+
+        return output;
     }
+
 
 //Dewpoint related methods
 //From Pavel-Sayekat: https://github.com/sparkfun/SparkFun_BME280_Breakout_Board/pull/6/files
     dewPointC(){
-        let double: bigint;
-        return double;
+        let celsius: number = readTempC(); 
+        let humidity: number = readFloatHumidity();
+        // (1) Saturation Vapor Pressure = ESGG(T)
+        let RATIO: number = 373.15 / (273.15 + celsius);
+        let RHS: number = -7.90298 * (RATIO - 1);
+
+        RHS += 5.02808 * Math.log10(RATIO);
+        RHS += -1.3816e-7 * (Math.pow(10, (11.344 * (1 - 1/RATIO ))) - 1) ;
+        RHS += 8.1328e-3 * (Math.pow(10, (-3.49149 * (RATIO - 1))) - 1) ;
+        RHS += Math.log10(1013.246);
+         // factor -3 is to adjust units - Vapor Pressure SVP * humidity
+        let VP: number = Math.pow(10, RHS - 3) * humidity;
+         // (2) DEWPOINT = F(Vapor Pressure)
+        let T: number = Math.log(VP/0.61078);   // temp var
+        return (241.88 * T) / (17.558 - T);
     }
+
     dewPointF(){
-        let double: bigint;
-        return double;
+        return (dewPointC() * 1.8 + 32); //Convert C to F
     }
 
     checkForStatusError(){
