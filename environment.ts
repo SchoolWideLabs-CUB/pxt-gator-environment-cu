@@ -176,12 +176,8 @@ class Environment {
     // 01 and 10 = Forced
     // 11 = Normal mode
     getMode(){
-
         let controlData: bigint = readRegister(BME280_ADDRESS, BME280_CTRL_MEAS_REG);
-        return(controlData & 0b00000011); //Clear bits 7 through 2
-
-
-       
+        return(controlData & 0b00000011); //Clear bits 7 through 2  
 
     } //Get the current mode: sleep, forced, or normal
 
@@ -190,7 +186,6 @@ class Environment {
     // 01 and 10 = Forced
     // 11 = Normal mode
     setMode(mode: bigint){
-
         if (mode > 0b11) {
             mode = 0; //Error check. Default to sleep mode
         }
@@ -444,30 +439,39 @@ class Environment {
 //a chunk of memory into that array.
     readRegisterRegion(address: bigint, offset: bigint, length: bigint){
         let data: number[] = [];
-        for (let i = 0; i < length; i++){
-            data.append(pins.i2cReadNumber(address, offset, NumberFormat.UInt8LE))
+        pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
+        for (let i = 0; i < length-1; i++){
+            data.append(pins.i2cReadNumber(address, NumberFormat.UInt8LE, true))
         }
+        data.append(pins.i2cReadNumber(address, NumberFormat.UInt8LE, false))
+        return data;
 
     }
 //readRegister reads one register
     readRegister(address: bigint, offset: bigint){
-        let value = pins.i2cReadNumber(address, offset, false);
+        pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
+        let value = pins.i2cReadNumber(address, NumberFormat.UInt8LE, false);
         return value;
     }
 //Reads two regs, LSByte then MSByte order, and concatenates them
 //Used for two-byte reads
-    readRegisterInt16(int1: bigint, offset: bigint){
-        let myBuffer = readRegisterRegion(address, offset, 2);  //Does memory transfer
-        int16_t output = (int16_t)myBuffer[0] | int16_t(myBuffer[1] << 8);
-        
-        return output;
+    readRegisterInt16(address: bigint, offset: bigint){
+        pins.i2cWriteNumber(address, offset);
+        return pins.i2cReadNumber(address, NumberFormat.UInt16BE, false);
     }
 //Writes a byte;
-    writeRegister(int1: bigint, int2: bigint, int3: bigint){
-
+    writeRegister(address: bigint, offset: bigint, value: bigint){
+        pins.i2cWriteNumber(address, value, NumberFormat.UInt8LE, false);
+        return;
     }
 
-    multiWriteRegister(address: bigint, offset: bigint, inputPointer: bigint, length: bigint){
+    multiWriteRegister(address: bigint, values: bigint[], length: bigint){
+
+        for (let i=0; i < length-1; i++){
+            pins.i2cWriteNumber(address, values[i], NumberFormat.UInt8LE, true);
+        }
+        pins.i2cWriteNumber(address, values[length-1], NumberFormat.UInt8LE, false);
+        return;
 
     }
 
