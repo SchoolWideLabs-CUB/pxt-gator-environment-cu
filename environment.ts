@@ -167,7 +167,7 @@ class Environment {
         this.appValid();
         //Write 0 bytes to this register to start app
 
-        this.writeRegister()
+        this.writeRegisterShort(CCS811_ADDRESS, CCS811_APP_START);
 
     };
 
@@ -332,9 +332,6 @@ class Environment {
         this.CO2 = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, true)
         this.tVOC = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, false)
 
-        pins.i2cWriteNumber(0x5B, 0x02, NumberFormat.UInt8LE, false)
-        this.CO2 = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, true)
-        this.tVOC = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, false)
 
     }
     dataAvailable(){
@@ -506,6 +503,11 @@ class Environment {
     writeRegister(address: number, offset: number, value: number){
         let message = (offset << 8) | value;
         pins.i2cWriteNumber(address, message, NumberFormat.UInt16BE, false);
+        return;
+    }
+
+    writeRegisterShort(address: number, offset: number){
+        pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
         return;
     }
 
