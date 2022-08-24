@@ -167,6 +167,8 @@ class Environment {
         this.appValid();
         //Write 0 bytes to this register to start app
 
+        this.writeRegister()
+
     };
 
     //Set the mode bits in the ctrl_meas register
@@ -355,7 +357,8 @@ class Environment {
 
     //Software reset routine: strictly resets. Run .begin() afterwards
     reset(){
-        this.writeRegister(BME280_ADDRESS, BME280_RST_REG, 0xB6);
+        //this.writeRegister(BME280_ADDRESS, BME280_RST_REG, 0xB6);
+        this.begin();
 
     }
 
