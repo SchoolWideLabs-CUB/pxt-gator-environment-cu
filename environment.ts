@@ -330,6 +330,10 @@ class Environment {
         this.CO2 = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, true)
         this.tVOC = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, false)
 
+        pins.i2cWriteNumber(0x5B, 0x02, NumberFormat.UInt8LE, false)
+        this.CO2 = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, true)
+        this.tVOC = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, false)
+
     }
     dataAvailable(){
         let value: number = this.readRegister(CCS811_ADDRESS, CCS811_STATUS);
