@@ -145,13 +145,13 @@ class Environment {
         this.setTempOverSample(this.BMEhumidOverSample); //Default of 1x oversample
         
         this.setMode(this.BMErunMode); //Go!
-        
-        let data: number[]= [0x11,0xE5,0x72,0x8A]; //Reset key
+
+        let data: number[]= [0x11, 0xE5, 0x72, 0x8A]; //Reset key
         
         this.readRegister(CCS811_ADDRESS, CCS811_HW_ID);
 
         //Reset the device
-        this.multiWriteRegister(CCS811_ADDRESS, CCS811_SW_RESET, data, 4);
+        this.multiWriteRegisterLE(CCS811_ADDRESS, CCS811_SW_RESET, data, 4);
 
         //Tclk = 1/16MHz = 0x0000000625
         //0.001 s / tclk = 16000 counts
@@ -326,8 +326,9 @@ class Environment {
         // Data ordered:
         // co2MSB, co2LSB, tvocMSB, tvocLSB
 
-        this.CO2 = (data[0] << 8) | data[1];
-        this.tVOC = (data[2] << 8) | data[3];
+        pins.i2cWriteNumber(0x5B, 0x02, NumberFormat.UInt8LE, false)
+        this.CO2 = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, true)
+        this.tVOC = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, false)
 
     }
     dataAvailable(){
@@ -496,16 +497,29 @@ class Environment {
     }
 //Writes a byte;
     writeRegister(address: number, offset: number, value: number){
-        pins.i2cWriteNumber(address, value, NumberFormat.UInt8LE, false);
+        let message = (offset << 8) | value;
+        pins.i2cWriteNumber(address, message, NumberFormat.UInt16BE, false);
         return;
     }
 
-    multiWriteRegister(address: number, offset: number, values: number[], length: number){
-
+    multiWriteRegisterLE(address: number, offset: number, values: number[], length: number){
         for (let i=0; i < length-1; i++){
-            pins.i2cWriteNumber(address, values[i], NumberFormat.UInt8LE, true);
+            let message = (offset << 8) | values[i];
+            pins.i2cWriteNumber(address, message, NumberFormat.UInt16LE, true);
         }
-        pins.i2cWriteNumber(address, values[length-1], NumberFormat.UInt8LE, false);
+        let message = (offset << 8) | values[length-1];
+        pins.i2cWriteNumber(address, values[length-1], NumberFormat.UInt16LE, false);
+        return;
+
+    }
+
+    multiWriteRegisterBE(address: number, offset: number, values: number[], length: number){
+        for (let i=0; i < length-1; i++){
+            let message = (offset << 8) | values[i];
+            pins.i2cWriteNumber(address, message, NumberFormat.UInt16BE, true);
+        }
+        let message = (offset << 8) | values[length-1];
+        pins.i2cWriteNumber(address, values[length-1], NumberFormat.UInt16BE, false);
         return;
 
     }
