@@ -142,26 +142,26 @@ class Environment {
         //Check communication with IC before anything else
 
         //Reading all compensation data, range 0x88:A1, 0xE1:E7
-        this.calibration.dig_T1 = (this.readRegister(BME280_ADDRESS, BME280_DIG_T1_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_T1_LSB_REG);
-        this.calibration.dig_T2 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T2_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T2_LSB_REG);
-        this.calibration.dig_T3 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T3_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T3_LSB_REG);
+        this.calibration.dig_T1 = (this.readRegisterUInt16LE(BME280_ADDRESS, BME280_DIG_T1_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_T1_LSB_REG);
+        this.calibration.dig_T2 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_T2_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T2_LSB_REG);
+        this.calibration.dig_T3 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_T3_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T3_LSB_REG);
 
-        this.calibration.dig_P1 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P1_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P1_LSB_REG);
-        this.calibration.dig_P2 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P2_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P2_LSB_REG);
-        this.calibration.dig_P3 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P3_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P3_LSB_REG);
-        this.calibration.dig_P4 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P4_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P4_LSB_REG);
-        this.calibration.dig_P5 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P5_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P5_LSB_REG);
-        this.calibration.dig_P6 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P6_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P6_LSB_REG);
-        this.calibration.dig_P7 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P7_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P7_LSB_REG);
-        this.calibration.dig_P8 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P8_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P8_LSB_REG);
-        this.calibration.dig_P9 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P9_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P9_LSB_REG);
+        this.calibration.dig_P1 = (this.readRegisterUInt16LE(BME280_ADDRESS, BME280_DIG_P1_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P1_LSB_REG);
+        this.calibration.dig_P2 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_P2_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P2_LSB_REG);
+        this.calibration.dig_P3 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_P3_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P3_LSB_REG);
+        this.calibration.dig_P4 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_P4_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P4_LSB_REG);
+        this.calibration.dig_P5 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_P5_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P5_LSB_REG);
+        this.calibration.dig_P6 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_P6_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P6_LSB_REG);
+        this.calibration.dig_P7 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_P7_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P7_LSB_REG);
+        this.calibration.dig_P8 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_P8_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P8_LSB_REG);
+        this.calibration.dig_P9 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_P9_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P9_LSB_REG);
 
-        this.calibration.dig_H1 = this.readRegister(BME280_ADDRESS, BME280_DIG_H1_REG);
-        this.calibration.dig_H2 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H2_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H2_LSB_REG);
-        this.calibration.dig_H3 = this.readRegister(BME280_ADDRESS, BME280_DIG_H3_REG);
-        this.calibration.dig_H4 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H4_MSB_REG) << 4) + (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H4_LSB_REG) & 0x0F);
-        this.calibration.dig_H5 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H5_MSB_REG) << 4) + ((this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H4_LSB_REG) >> 4) & 0x0F);
-        this.calibration.dig_H6 = this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H6_REG);
+        this.calibration.dig_H1 = this.readRegisterUInt16LE(BME280_ADDRESS, BME280_DIG_H1_REG);
+        this.calibration.dig_H2 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_H2_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H2_LSB_REG);
+        this.calibration.dig_H3 = this.readRegisterUInt16LE(BME280_ADDRESS, BME280_DIG_H3_REG);
+        this.calibration.dig_H4 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_H4_MSB_REG) << 4) + (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H4_LSB_REG) & 0x0F);
+        this.calibration.dig_H5 = (this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_H5_MSB_REG) << 4) + ((this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H4_LSB_REG) >> 4) & 0x0F);
+        this.calibration.dig_H6 = this.readRegisterInt16LE(BME280_ADDRESS, BME280_DIG_H6_REG);
 
         //Most of the time the sensor will be init with default values
         //But in case user has old/deprecated code, use the BMEsettings.x values
@@ -528,6 +528,18 @@ class Environment {
         pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
         pause(50)
         return pins.i2cReadNumber(address, NumberFormat.UInt16BE, false);
+    }
+
+    readRegisterInt16LE(address: number, offset: number){
+        pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
+        pause(50)
+        return pins.i2cReadNumber(address, NumberFormat.UInt16LE, false);
+    }
+
+    readRegisterUInt16LE(address: number, offset: number){
+        pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
+        pause(50)
+        return pins.i2cReadNumber(address, NumberFormat.Int16LE, false);
     }
 //Writes a byte;
     writeRegister(address: number, offset: number, value: number){
