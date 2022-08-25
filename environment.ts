@@ -4,7 +4,7 @@
  * Environment Class
  */
 
-const BME280_ADDRESS = 0xEE;
+const BME280_ADDRESS = 0x77;
 const BME280_DIG_T1_LSB_REG = 0x88;
 const BME280_DIG_T1_MSB_REG = 0x89;
 const BME280_DIG_T2_LSB_REG = 0x8A;
