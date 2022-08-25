@@ -21,7 +21,7 @@ enum measurementType {
 //% color=#f44242 icon="\uf0c2"
 namespace gatorEnvironment {
     
-    let gatorEnvironmentCombo: Environment;
+    let gatorEnvironmentCombo = new Environment();
 
     /**
     * Initialize the gator:environment sensor for readings
@@ -30,7 +30,6 @@ namespace gatorEnvironment {
     //% blockId="gatorEnvironment_beginEnvironment" 
     //% block="initialize gator:environment sensors"
     export function beginEnvironment() {
-        gatorEnvironmentCombo = new Environment();
         gatorEnvironmentCombo.begin();
         return
     }
