@@ -424,7 +424,7 @@ class Environment {
     //get the reading (adc_T);
     readTempC(){
         let buffer: number[] = [0,0,0]
-        buffer = this.readRegisterRegion(BME280_ADDRESS, BME280_TEMPERATURE_MSB_REG, 3);
+        buffer = this.readRegisterRegion32(BME280_ADDRESS, BME280_TEMPERATURE_MSB_REG, 3);
         let adc_T = (buffer[0] << 12) | (buffer[1] << 4) | ((buffer[2] >> 4) & 0x0F);
 
         let var1: number = (((adc_T>>3) - (this.calibration.dig_T1<<1)) * (this.calibration.dig_T2)) >> 11;
@@ -493,6 +493,17 @@ class Environment {
         data.push(pins.i2cReadNumber(address, NumberFormat.UInt8LE, false))
         return data;
 
+    }
+
+    readRegisterRegion32(address: number, offset: number, length: number){
+        let data: number[] = [];
+        pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
+        pause(50)
+        for (let i = 0; i < length-1; i++){
+            data.push(pins.i2cReadNumber(address, NumberFormat.Int32LE, true))
+        }
+        data.push(pins.i2cReadNumber(address, NumberFormat.Int32LE, false))
+        return data;
     }
 
 //this.readRegister reads one register
