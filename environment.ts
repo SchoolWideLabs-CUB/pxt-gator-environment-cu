@@ -173,6 +173,8 @@ class Environment {
 
         this.setDriveMode(1);
 
+        pause(500);
+
     };
 
     readAlgorithmResults(){
