@@ -424,7 +424,9 @@ class Environment {
     //get the reading (adc_T);
     readTempC(){
         let buffer: number[] = [0,0,0]
-        buffer = this.readRegisterRegion32(BME280_ADDRESS, BME280_TEMPERATURE_MSB_REG, 3);
+        buffer[0] = this.readRegister(BME280_ADDRESS, BME280_TEMPERATURE_MSB_REG);
+        buffer[1] = this.readRegister(BME280_ADDRESS, BME280_TEMPERATURE_LSB_REG);
+        buffer[2] = this.readRegister(BME280_ADDRESS, BME280_TEMPERATURE_XLSB_REG);
         let adc_T = (buffer[0] << 12) | (buffer[1] << 4) | ((buffer[2] >> 4) & 0x0F);
 
         let var1: number = (((adc_T>>3) - (this.calibration.dig_T1<<1)) * (this.calibration.dig_T2)) >> 11;
