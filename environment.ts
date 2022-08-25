@@ -146,14 +146,13 @@ class Environment {
         
         this.setMode(this.BMErunMode); //Go!
 
-        let data: number[]= [0x11, 0xE5, 0x72, 0x8A]; //Reset key
-        
 
         //Reset the device
+        let data: number[]= [0x11, 0xE5, 0x72, 0x8A]; //Reset key
         this.writeRegisterShort(CCS811_ADDRESS, CCS811_SW_RESET);
 
-        for (let addr in data){
-            this.writeRegisterShort(CCS811_ADDRESS, addr);
+        for (let i=0; i < 4; i++){
+            this.writeRegisterShort(CCS811_ADDRESS, data[i]);
         }
 
         //Tclk = 1/16MHz = 0x0000000625
