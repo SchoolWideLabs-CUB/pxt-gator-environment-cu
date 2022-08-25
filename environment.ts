@@ -131,6 +131,8 @@ class Environment {
 
         this.setDriveMode(1);
 
+        this.reset();
+
         // need 4 seconds before CCS811 can pull results properly
         this.BMErunMode = 3; //Normal/Run
         this.BMEtStandby = 0; //0.5ms
@@ -539,7 +541,7 @@ class Environment {
     readRegisterUInt16LE(address: number, offset: number){
         pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
         pause(50)
-        return pins.i2cReadNumber(address, NumberFormat.Int16BE, false);
+        return pins.i2cReadNumber(address, NumberFormat.Int16LE, false);
     }
 //Writes a byte;
     writeRegister(address: number, offset: number, value: number){
