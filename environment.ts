@@ -360,8 +360,7 @@ class Environment {
 
     //Software reset routine: strictly resets. Run .begin() afterwards
     reset(){
-        //this.writeRegister(BME280_ADDRESS, BME280_RST_REG, 0xB6);
-        this.begin();
+        this.writeRegister(BME280_ADDRESS, BME280_RST_REG, 0xB6);
 
     }
 
