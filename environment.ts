@@ -175,7 +175,7 @@ class Environment {
         
         this.setMode(this.BMErunMode); //Go!
 
-
+        pause(2000)
 
     };
 
