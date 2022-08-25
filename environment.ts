@@ -105,48 +105,6 @@ class Environment {
     //This also gets the SensorCalibration constants
     begin(){
 
-        this.BMErunMode = 3; //Normal/Run
-        this.BMEtStandby = 0; //0.5ms
-        this.BMEfilter = 0; //Filter off
-        this.BMEtempOverSample = 1;
-        this.BMEpressOverSample = 1;
-        this.BMEhumidOverSample = 1;
-        this.BMEtempCorrection = 0.0; // correction of temperature - added to the result
-        //Check communication with IC before anything else
-
-        //Reading all compensation data, range 0x88:A1, 0xE1:E7
-        this.calibration.dig_T1 = (this.readRegister(BME280_ADDRESS, BME280_DIG_T1_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_T1_LSB_REG);
-        this.calibration.dig_T2 = (this.readRegister(BME280_ADDRESS, BME280_DIG_T2_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_T2_LSB_REG);
-        this.calibration.dig_T3 = (this.readRegister(BME280_ADDRESS, BME280_DIG_T3_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_T3_LSB_REG);
-
-        this.calibration.dig_P1 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P1_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P1_LSB_REG);
-        this.calibration.dig_P2 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P2_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P2_LSB_REG);
-        this.calibration.dig_P3 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P3_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P3_LSB_REG);
-        this.calibration.dig_P4 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P4_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P4_LSB_REG);
-        this.calibration.dig_P5 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P5_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P5_LSB_REG);
-        this.calibration.dig_P6 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P6_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P6_LSB_REG);
-        this.calibration.dig_P7 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P7_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P7_LSB_REG);
-        this.calibration.dig_P8 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P8_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P8_LSB_REG);
-        this.calibration.dig_P9 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P9_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P9_LSB_REG);
-
-        this.calibration.dig_H1 = this.readRegister(BME280_ADDRESS, BME280_DIG_H1_REG);
-        this.calibration.dig_H2 = (this.readRegister(BME280_ADDRESS, BME280_DIG_H2_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_H2_LSB_REG);
-        this.calibration.dig_H3 = this.readRegister(BME280_ADDRESS, BME280_DIG_H3_REG);
-        this.calibration.dig_H4 = (this.readRegister(BME280_ADDRESS, BME280_DIG_H4_MSB_REG) << 4) + (this.readRegister(BME280_ADDRESS, BME280_DIG_H4_LSB_REG) & 0x0F);
-        this.calibration.dig_H5 = (this.readRegister(BME280_ADDRESS, BME280_DIG_H5_MSB_REG) << 4) + ((this.readRegister(BME280_ADDRESS, BME280_DIG_H4_LSB_REG) >> 4) & 0x0F);
-        this.calibration.dig_H6 = this.readRegister(BME280_ADDRESS, BME280_DIG_H6_REG);
-
-        //Most of the time the sensor will be init with default values
-        //But in case user has old/deprecated code, use the BMEsettings.x values
-        this.setStandbyTime(this.BMEtStandby);
-        this.setFilter(this.BMEfilter);
-        this.setPressureOverSample(this.BMEtempOverSample); //Default of 1x oversample
-        this.setHumidityOverSample(this.BMEpressOverSample); //Default of 1x oversample
-        this.setTempOverSample(this.BMEhumidOverSample); //Default of 1x oversample
-        
-        this.setMode(this.BMErunMode); //Go!
-
-
         //Reset the device
         let data: number[]= [0x11, 0xE5, 0x72, 0x8A]; //Reset key
         this.writeRegisterShort(CCS811_ADDRESS, CCS811_SW_RESET);
@@ -173,7 +131,49 @@ class Environment {
 
         this.setDriveMode(1);
 
-        pause(500);
+        // need 4 seconds before CCS811 can pull results properly
+        this.BMErunMode = 3; //Normal/Run
+        this.BMEtStandby = 0; //0.5ms
+        this.BMEfilter = 0; //Filter off
+        this.BMEtempOverSample = 1;
+        this.BMEpressOverSample = 1;
+        this.BMEhumidOverSample = 1;
+        this.BMEtempCorrection = 0.0; // correction of temperature - added to the result
+        //Check communication with IC before anything else
+
+        //Reading all compensation data, range 0x88:A1, 0xE1:E7
+        this.calibration.dig_T1 = (this.readRegister(BME280_ADDRESS, BME280_DIG_T1_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_T1_LSB_REG);
+        this.calibration.dig_T2 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T2_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T2_LSB_REG);
+        this.calibration.dig_T3 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T3_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_T3_LSB_REG);
+
+        this.calibration.dig_P1 = (this.readRegister(BME280_ADDRESS, BME280_DIG_P1_MSB_REG) << 8) + this.readRegister(BME280_ADDRESS, BME280_DIG_P1_LSB_REG);
+        this.calibration.dig_P2 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P2_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P2_LSB_REG);
+        this.calibration.dig_P3 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P3_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P3_LSB_REG);
+        this.calibration.dig_P4 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P4_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P4_LSB_REG);
+        this.calibration.dig_P5 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P5_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P5_LSB_REG);
+        this.calibration.dig_P6 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P6_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P6_LSB_REG);
+        this.calibration.dig_P7 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P7_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P7_LSB_REG);
+        this.calibration.dig_P8 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P8_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P8_LSB_REG);
+        this.calibration.dig_P9 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P9_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_P9_LSB_REG);
+
+        this.calibration.dig_H1 = this.readRegister(BME280_ADDRESS, BME280_DIG_H1_REG);
+        this.calibration.dig_H2 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H2_MSB_REG) << 8) + this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H2_LSB_REG);
+        this.calibration.dig_H3 = this.readRegister(BME280_ADDRESS, BME280_DIG_H3_REG);
+        this.calibration.dig_H4 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H4_MSB_REG) << 4) + (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H4_LSB_REG) & 0x0F);
+        this.calibration.dig_H5 = (this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H5_MSB_REG) << 4) + ((this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H4_LSB_REG) >> 4) & 0x0F);
+        this.calibration.dig_H6 = this.readRegisterSigned(BME280_ADDRESS, BME280_DIG_H6_REG);
+
+        //Most of the time the sensor will be init with default values
+        //But in case user has old/deprecated code, use the BMEsettings.x values
+        this.setStandbyTime(this.BMEtStandby);
+        this.setFilter(this.BMEfilter);
+        this.setPressureOverSample(this.BMEtempOverSample); //Default of 1x oversample
+        this.setHumidityOverSample(this.BMEpressOverSample); //Default of 1x oversample
+        this.setTempOverSample(this.BMEhumidOverSample); //Default of 1x oversample
+        
+        this.setMode(this.BMErunMode); //Go!
+
+
 
     };
 
@@ -494,6 +494,7 @@ class Environment {
         return data;
 
     }
+
 //this.readRegister reads one register
     readRegister(address: number, offset: number){
         pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
@@ -501,6 +502,14 @@ class Environment {
         let value = pins.i2cReadNumber(address, NumberFormat.UInt8LE, false);
         return value;
     }
+
+    readRegisterSigned(address: number, offset: number){
+        pins.i2cWriteNumber(address, offset, NumberFormat.Int8LE, false);
+        pause(50)
+        let value = pins.i2cReadNumber(address, NumberFormat.Int8LE, false);
+        return value;
+    }
+
 //Reads two regs, LSByte then MSByte order, and concatenates them
 //Used for two-byte reads
     readRegisterInt16(address: number, offset: number){
