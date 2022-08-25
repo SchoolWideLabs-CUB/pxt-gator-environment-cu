@@ -533,13 +533,13 @@ class Environment {
     readRegisterInt16LE(address: number, offset: number){
         pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
         pause(50)
-        return pins.i2cReadNumber(address, NumberFormat.UInt16LE, false);
+        return pins.i2cReadNumber(address, NumberFormat.UInt16BE, false);
     }
 
     readRegisterUInt16LE(address: number, offset: number){
         pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
         pause(50)
-        return pins.i2cReadNumber(address, NumberFormat.Int16LE, false);
+        return pins.i2cReadNumber(address, NumberFormat.Int16BE, false);
     }
 //Writes a byte;
     writeRegister(address: number, offset: number, value: number){
