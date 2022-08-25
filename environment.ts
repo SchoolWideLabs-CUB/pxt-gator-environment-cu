@@ -148,10 +148,13 @@ class Environment {
 
         let data: number[]= [0x11, 0xE5, 0x72, 0x8A]; //Reset key
         
-        this.readRegister(CCS811_ADDRESS, CCS811_HW_ID);
 
         //Reset the device
-        this.multiWriteRegisterLE(CCS811_ADDRESS, CCS811_SW_RESET, data, 4);
+        this.writeRegisterShort(CCS811_ADDRESS, CCS811_SW_RESET);
+
+        for (let addr in data){
+            this.writeRegisterShort(CCS811_ADDRESS, addr);
+        }
 
         //Tclk = 1/16MHz = 0x0000000625
         //0.001 s / tclk = 16000 counts
@@ -162,14 +165,53 @@ class Environment {
             temp++;
         }
         
-        this.checkForStatusError();
+        // Check Status
+        this.readRegister(CCS811_ADDRESS, CCS811_STATUS)
         
-        this.appValid();
         //Write 0 bytes to this register to start app
 
         this.writeRegisterShort(CCS811_ADDRESS, CCS811_APP_START);
 
+        this.setDriveMode(1);
+
     };
+
+    readAlgorithmResults(){
+
+        pins.i2cWriteNumber(CCS811_ADDRESS, CCS811_ALG_RESULT_DATA, NumberFormat.UInt8LE, false)
+        this.CO2 = pins.i2cReadNumber(CCS811_ADDRESS, NumberFormat.UInt16BE, true)
+        this.tVOC = pins.i2cReadNumber(CCS811_ADDRESS, NumberFormat.UInt16BE, false)
+
+
+    }
+    dataAvailable(){
+        let value: number = this.readRegister(CCS811_ADDRESS, CCS811_STATUS);
+        return (value & 1 << 3);
+    }
+
+    getTVOC(){
+        return this.tVOC;
+    }
+
+    getCO2(){
+        return this.CO2;
+    }
+
+    //Mode 0 = Idle
+    //Mode 1 = read every 1s
+    //Mode 2 = every 10s
+    //Mode 3 = every 60s
+    //Mode 4 = RAW mode
+    setDriveMode(mode: number) {
+        if (mode > 4) {
+            mode = 4; //sanitize input
+        }
+        let value = this.readRegister(CCS811_ADDRESS, CCS811_MEAS_MODE); //Read what's currently there
+        value &= ~(0b00000111 << 4); //Clear DRIVE_MODE bits
+        value |= (mode << 4); //Mask in mode
+        this.writeRegister(CCS811_ADDRESS, CCS811_MEAS_MODE, value);
+
+    }
 
     //Set the mode bits in the ctrl_meas register
     // Mode 00 = Sleep
@@ -197,21 +239,7 @@ class Environment {
 
     } //Set the current mode
 
-    //Mode 0 = Idle
-    //Mode 1 = read every 1s
-    //Mode 2 = every 10s
-    //Mode 3 = every 60s
-    //Mode 4 = RAW mode
-    setDriveMode(mode: number) {
-        if (mode > 4) {
-            mode = 4; //sanitize input
-        }
-        let value = this.readRegister(CCS811_ADDRESS, CCS811_MEAS_MODE); //Read what's currently there
-        value &= ~(0b00000111 << 4); //Clear DRIVE_MODE bits
-        value |= (mode << 4); //Mask in mode
-        this.writeRegister(CCS811_ADDRESS, CCS811_MEAS_MODE, value);
-
-    }
+    
 
     //Set the temperature oversample value
     //0 turns off temp sensing
@@ -322,30 +350,7 @@ class Environment {
         return this._referencePressure;
     }
 
-    readAlgorithmResults(){
-
-        let data = this.readRegisterRegion(CCS811_ADDRESS, CCS811_ALG_RESULT_DATA, 4);
-        // Data ordered:
-        // co2MSB, co2LSB, tvocMSB, tvocLSB
-
-        pins.i2cWriteNumber(0x5B, 0x02, NumberFormat.UInt8LE, false)
-        this.CO2 = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, true)
-        this.tVOC = pins.i2cReadNumber(0x5B, NumberFormat.UInt16BE, false)
-
-
-    }
-    dataAvailable(){
-        let value: number = this.readRegister(CCS811_ADDRESS, CCS811_STATUS);
-        return (value & 1 << 3);
-    }
-
-    getTVOC(){
-        return this.tVOC;
-    }
-
-    getCO2(){
-        return this.CO2;
-    }
+    
     //Check the measuring bit and return true while device is taking measurement
     isMeasuring(){
         let stat: number = this.readRegister(BME280_ADDRESS, BME280_STAT_REG);
@@ -480,6 +485,7 @@ class Environment {
     readRegisterRegion(address: number, offset: number, length: number){
         let data: number[] = [];
         pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
+        pause(50)
         for (let i = 0; i < length-1; i++){
             data.push(pins.i2cReadNumber(address, NumberFormat.UInt8LE, true))
         }
@@ -490,6 +496,7 @@ class Environment {
 //this.readRegister reads one register
     readRegister(address: number, offset: number){
         pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
+        pause(50)
         let value = pins.i2cReadNumber(address, NumberFormat.UInt8LE, false);
         return value;
     }
@@ -497,17 +504,20 @@ class Environment {
 //Used for two-byte reads
     readRegisterInt16(address: number, offset: number){
         pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
+        pause(50)
         return pins.i2cReadNumber(address, NumberFormat.UInt16BE, false);
     }
 //Writes a byte;
     writeRegister(address: number, offset: number, value: number){
         let message = (offset << 8) | value;
         pins.i2cWriteNumber(address, message, NumberFormat.UInt16BE, false);
+        pause(50)
         return;
     }
 
     writeRegisterShort(address: number, offset: number){
         pins.i2cWriteNumber(address, offset, NumberFormat.UInt8LE, false);
+        pause(50)
         return;
     }
 
@@ -515,9 +525,11 @@ class Environment {
         for (let i=0; i < length-1; i++){
             let message = (offset << 8) | values[i];
             pins.i2cWriteNumber(address, message, NumberFormat.UInt16LE, true);
+            pause(50)
         }
         let message = (offset << 8) | values[length-1];
         pins.i2cWriteNumber(address, values[length-1], NumberFormat.UInt16LE, false);
+        pause(50)
         return;
 
     }
@@ -526,9 +538,11 @@ class Environment {
         for (let i=0; i < length-1; i++){
             let message = (offset << 8) | values[i];
             pins.i2cWriteNumber(address, message, NumberFormat.UInt16BE, true);
+            pause(50)
         }
         let message = (offset << 8) | values[length-1];
         pins.i2cWriteNumber(address, values[length-1], NumberFormat.UInt16BE, false);
+        pause(50)
         return;
 
     }
