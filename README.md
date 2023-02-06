@@ -1,5 +1,5 @@
 
-> Open this page at [https://jay-ml.github.io/pxt-gator-environment-cu/](https://jay-ml.github.io/pxt-gator-environment-cu/)
+> Open this page at https://github.com/SchoolWideLabs-CUB/pxt-gator-environment-cu
 
 ## Use as Extension
 
@@ -8,22 +8,22 @@ This repository can be added as an **extension** in MakeCode.
 * open [https://makecode.microbit.org/](https://makecode.microbit.org/)
 * click on **New Project**
 * click on **Extensions** under the gearwheel menu
-* search for **https://github.com/jay-ml/pxt-gator-environment-cu** and import
+* search for **https://github.com/SchoolWideLabs-CUB/pxt-gator-environment-cu** and import
 
-## Edit this project ![Build status badge](https://github.com/jay-ml/pxt-gator-environment-cu/workflows/MakeCode/badge.svg)
+## Edit this project ![Build status badge](https://github.com/SchoolWideLabs-CUB/pxt-gator-environment-cu/workflows/MakeCode/badge.svg)
 
 To edit this repository in MakeCode.
 
 * open [https://makecode.microbit.org/](https://makecode.microbit.org/)
 * click on **Import** then click on **Import URL**
-* paste **https://github.com/jay-ml/pxt-gator-environment-cu** and click import
+* paste **https://github.com/SchoolWideLabs-CUB/pxt-gator-environment-cu** and click import
 
 ## Blocks preview
 
 This image shows the blocks code from the last commit in master.
 This image may take a few minutes to refresh.
 
-![A rendered view of the blocks](https://github.com/jay-ml/pxt-gator-environment-cu/raw/master/.github/makecode/blocks.png)
+![A rendered view of the blocks](https://github.com/SchoolWideLabs-CUB/pxt-gator-environment-cu/raw/master/.github/makecode/blocks.png)
 
 #### Metadata (used for search, rendering)
 
